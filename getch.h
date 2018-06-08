@@ -6,6 +6,7 @@ extern "C"{
 #ifdef _WIN32
 #include <conio.h>
 #elseif __SNESOS_SYSTEM
+#define __ENABLE_GETCH
 #include <os/terminal.h>
 #else
 int getch();
