@@ -5,8 +5,10 @@ extern "C"{
 #endif
 #ifdef _WIN32
 #include <conio.h>
+#elseif __SNESOS_SYSTEM
+#include <os/terminal.h>
 #else
-	int getch();
+int getch();
 #endif
 #ifdef __cplusplus
 };
