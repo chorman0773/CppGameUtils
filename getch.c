@@ -1,6 +1,6 @@
 #include <getch.h>
 
-#ifndef _WIN32
+#if  !defined(_WIN32) && !defined(__SNESOS_SYSTEM)
 #include <termios.h>
 #include <unistd.h>
 #include <stdio.h>
