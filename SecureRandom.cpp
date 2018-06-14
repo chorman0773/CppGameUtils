@@ -1,6 +1,7 @@
 #include <SHA256.hpp>
 #include <random>
 #include <SecureRandom.hpp>
+#include <cstring>
 
 int h[8] = {0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5};
 
@@ -133,6 +134,7 @@ void SecureRandom::seed(){
 	This function is called by the seed function and the setSeed function.
 */
 void SecureRandom::initSeed(const void* v,size_t s){
+	std::lock_guard<recursive_mutex> sync(lock);
 	const char* c = (const char*)v;
 	char* q = new char[s];
 	
@@ -158,9 +160,11 @@ void SecureRandom::update(char (&bytes)[32]){
 }
 
 void SecureRandom::nextBytes(uint8_t* out,size_t size){
-	lock.lock();
+	std::lock_guard<recursive_mutex> sync(lock);
 	size_t tSize = size;
-	if(!seeded)seed();
+	if(!seeded)
+		seed();
+		
 	while((tSize%32)!=0)tSize*=2;
 	char* tOut = new char[tSize];
 	char (*byteBlocks)[32] = reinterpret_cast<char(*)[32]>(tOut);
@@ -172,7 +176,6 @@ void SecureRandom::nextBytes(uint8_t* out,size_t size){
 		reduce(tOut,tSize);
 	}
 	memcpy(out,tOut,size);
-	lock.unlock();
 }
 
 uint32_t SecureRandom::next(int bits){

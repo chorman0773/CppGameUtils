@@ -12,15 +12,49 @@
 #include <iostream>
 #include "Hash.hpp"
 
+#define VERSION_CONSTEXPR constexpr
+#define VERISON_DELETE =delete
+#define VERSION_DEFAULT =default;
+
+#ifdef _MSC_VER
+#if _MSC_VER < 1800
+#define VERSION_CONSTEXPR inline
+#define VERSION_CONSTEXPR_DISABLED
+#define VERSION_DELETE
+#define VERSION_DEFAULT {}
+#endif
+#endif
+
+#undef major 
+#undef minor
+
 using std::string;
 using std::istream;
 using std::ostream;
 
-enum predefined{
-	minimum, current, currOrigin
+
+
+
+template<typename group> struct VersionConstants{
+private:
+	VersionConstants()VERISON_DELETE;
+	VersionConstants(const VersionConstants&)VERSION_DELETE;
+	VersionConstants(VersionConstants&&)VERSION_DELETE;
+	VersionConstants& operator=(const VersionConstants&)VERSION_DELETE;
+	VersionConstants& operator=(VersionConstants&&)VERSION_DELETE;
 };
 
-template<predefined target> struct VersionConstants{};
+template<typename group,typename=typename std::conditional<false,decltype(group::major),decltype(group::minor)>
+	struct VersionConstants<group,target>{
+	public:
+		VERSION_CONSTEXPR VersionConstants()VERSION_DEFAULT
+		VERSION_CONSTEXPR VersionConstants(const VersionConstants&)VERSION_DEFAULT
+		VERSION_CONSTEXPR VersionConstants(VersionConstants&&)VERSION_DEFAULT
+		VERSION_CONSTEXPR VersionConstants& operator=(const VersionConstants&)VERSION_DEFAULT
+		VERSION_CONSTEXPR VersionConstants& operator=(VersionConstants&&)VERSION_DEFAULT
+		VERSION_CONSTEXPR VersionConstants(group){}
+
+	};
 
 /*
  * Represents a version of the code.
@@ -31,22 +65,24 @@ template<predefined target> struct VersionConstants{};
  * The Version class provides both the read from (istream >>) and the write to (ostream <<) operators
  * To write in string form.
  */
-class Version : public Hashable{
+class Version{
 private:
-	int major;
-	int minor;
+	unsigned char major;
+	unsigned char minor;
 public:
 	/*
 	 * Constructs an unknown (null) version.
 	 * The default Version produced is 1.0
 	 */
-	Version();
+	VERSION_CONSTEXPR Version():major(0),minor(0){
+
+	}
 	/*
 	 * Obtains a version given in an encoded form (Ex. 0x0000).
 	 * This follows the sentry format for encoding versions (2-bytes BE, High-byte is Major version -1, Low-byte is minor version)
 	 * This Constructor should be used only when you are dealing with Embedded and Encoded Version constants
 	 */
-	Version(int);
+ 	VERSION_CONSTEXPR Version(int encoded):major(encoded>>8),minor(encoded){}
 	/*
 	 * Parses a given string in the form <Mj>.<mi> and produces a version given those 2 inputs.
 	 * Both Mj and mi must be valid integers, with Mj being between 1 and 256 and Mi being between 0 and 255
@@ -56,20 +92,13 @@ public:
 	 * Obtains a version based on a given Major and minor version.
 	 * Major must be between 1 and 256 and minor must be between 0 and 255
 	 */
-	Version(int,int);
+	VERSION_CONSTEXPR Version(int maj,int min):major(maj-1),minor(min){}
 	
-	/*
-	* Obtains the Minimum Supported Version.
-	*/
-	Version(VersionConstants<minimum>);
-	/*
-	* Obtains the Current running Version.
-	*/
-	Version(VersionConstants<current>);
-	/*
-	* Obtains the Origin of the current Version.
-	*/
-	Version(VersionConstants<currOrigin>);
+	template<typename group> VERSION_CONSTEXPR Version(VersionConstants<group>):
+	major(group::major-1),minor(group::minor){
+
+	}
+	
 	/*
 	 * Gets the major version, ranging from 1 to 256
 	 */
@@ -87,7 +116,9 @@ public:
 	 * Obtains the Origin of this Version. The origin of a Version is equal to the Version
 	 * that has the same Major version, but a minor version of 0.
 	 */
-	Version getOrigin()const;
+	VERSION_CONSTEXPR Version getOrigin()const{
+		return Version(int(major)+1,0);
+	}
 	/*
 	 * Returns this Version as a string.
 	 * The Resultant String is in the form <major>.<minor>
@@ -97,7 +128,9 @@ public:
 	 * Computes the hashcode of this Version.
 	 * This is effectively major*31+minor
 	 */
-	int32_t hashCode()const;
+	VERSION_CONSTEXPR int32_t hashCode()const{
+		return int(major)*31+int(minor);
+	}
 	/*
 	 * Compares this version with annother. A Version is the same if its Major version and
 	 * Minor version are exactly the same
@@ -138,9 +171,10 @@ istream& operator>>(istream&,Version&);
  */
 ostream& operator<<(ostream&,const Version&);
 
-typedef VersionConstants<current> CurrentVersion;
-typedef VersionConstants<minimum> MinimumVersion;
-typedef VersionConstants<currOrigin> CurrentOrigin;
 
+
+int32_t hashcode(Version v){
+	return v.hashCode();
+}
 
 #endif /* __VERSION_HPP__18_04_04_11_12_42 */

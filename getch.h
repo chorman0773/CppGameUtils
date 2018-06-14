@@ -3,13 +3,14 @@
 #ifdef __cplusplus
 extern "C"{
 #endif
-#ifdef _WIN32
-#include <conio.h>
-#elseif __SNESOS_SYSTEM
-#define __ENABLE_GETCH
-#include <os/terminal.h>
+#include <CompilerTraits.hpp>
+#ifdef CPP_HAS_GETCH
+#include CPP_GETCH_HEADER
+#ifdef CPP_GETCH_DEPRECATED
+#define getch _getch
+#endif
 #else
-int getch();
+	int getch();
 #endif
 #ifdef __cplusplus
 };

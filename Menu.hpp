@@ -5,7 +5,6 @@
 #include <string>
 #include <vector>
 #include <type_traits>
-#include "TypingManagement.hpp"
 
 #if __cplusplus >= 201103L
 #define __MENU_CODE_VARARGS_TEMPLATE

@@ -1,7 +1,6 @@
 #ifndef __SecureRandom_hpp_2018_05_31_10_48
 #define __SecureRandom_hpp_2018_05_31_10_48
 #include <Random.hpp>
-
 /*
     The SecureRandom class provides a cryptographically secure psuedo-random number generator fit for purposes
     where Secure Random bytes are required. It is greatly advised that you use this class for Cryptographic Purposes
@@ -14,7 +13,6 @@ private:
 	char state[32];
 	char secondary[32];
 	bool seeded;
-	mutex lock;
 	void initSeed(const void*,size_t);
 	void update(char (&)[32]);
 protected:

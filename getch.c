@@ -1,6 +1,5 @@
 #include <getch.h>
 
-#if  !defined(_WIN32) && !defined(__SNESOS_SYSTEM)
 #include <termios.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -18,4 +17,3 @@ int getch(void)
     tcsetattr( STDIN_FILENO, TCSANOW, &oldattr );
     return ch;
 }
-#endif

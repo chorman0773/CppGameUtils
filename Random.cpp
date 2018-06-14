@@ -1,5 +1,7 @@
 #include "Random.hpp"
 #include "JTime.hpp"
+#include <algorithm>
+using std::min;
 seed_t number(32);
 const seed_t cprime = 4989641;
 
@@ -29,12 +31,11 @@ seed_t initRandomizeSeed(seed_t seed){
 }
 
 uint32_t Random::next(int bits){
+	std::lock_guard<recursive_mutex> sync(lock);
 	int ret;
-	lock.lock();
 	seed = (seed * 0x5DEECE66DL + 0xBL) & ((1LL << 48) - 1);
-	ret = (int)(seed >> (48 - bits));
-	lock.unlock();
-	return ret;
+	return (int)(seed >> (48 - bits));
+
 }
 Random::Random():lock(){
 	setSeed(genUniqueSeed());
@@ -44,10 +45,9 @@ Random::Random(seed_t s):lock(){
 	setSeed(s);
 }
 void Random::setSeed(seed_t seed){
-	lock.lock();
+	std::lock_guard<recursive_mutex> sync(lock);
 	this->seed = initRandomizeSeed(seed);
 	this->haveNextNextGaussian = false;
-	lock.unlock();
 }
 
 int Random::nextInt(){
@@ -69,11 +69,11 @@ int Random::nextInt(int bound){
 }
 
 double Random::nextGuassian(){
+	std::lock_guard<recursive_mutex> sync(lock);
 	double ret;
-	lock.lock();
 	if (haveNextNextGaussian) {
 			haveNextNextGaussian = false;
-			ret = nextNextGaussian;
+			return nextNextGaussian;
 	} else {
 			double v1, v2, s;
 			do {
@@ -84,10 +84,8 @@ double Random::nextGuassian(){
 			double multiplier = sqrt(-2 * log(s)/s);
 			nextNextGaussian = v2 * multiplier;
 			haveNextNextGaussian = true;
-			ret = v1 * multiplier;
+			return v1 * multiplier;
 		}
-	lock.unlock();
-	return ret;
 }
 int64_t Random::nextLong(){
 	return nextInt()<<32LL+nextInt();
@@ -98,12 +96,12 @@ float Random::nextFloat(){
 }
 
 double Random::nextDouble(){
-	return ((long)next(26) << 27 + next(27))/((double)(1L << 53));
+	return ((uint64_t)next(26) << 27 + next(27))/((double)(1L << 53));
 }
 
 void Random::nextBytes(uint8_t* out,size_t size){
 	for (int i = 0; i < size; )
-		for (int rnd = nextInt(), n = __min(size - i, 4);
+		for (int rnd = nextInt(), n = min<size_t>(size - i, 4);
         	  n-- > 0; rnd >>= 8)
       		 out[i++] = (char)rnd;
 }

@@ -22,6 +22,7 @@ public:
 	UUID(uint64_t,uint64_t);
 	UUID();
 	UUID(string);
+	UUID(const char*);
 	uint64_t getHigh()const;
 	uint64_t getLow()const;
 	int32_t hashCode()const;
@@ -39,6 +40,6 @@ ostream& operator<<(ostream&,const UUID&);
 istream& operator>>(istream&,UUID&);
 string  operator+(const string&,const UUID&);
 
-
+int32_t hashcode(const UUID&);
 
 #endif

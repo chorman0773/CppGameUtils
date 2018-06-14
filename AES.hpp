@@ -1,5 +1,5 @@
 #ifndef __AES_hpp_2018_06_08_13_52
-
+#include <cstddef>
 namespace aes{
     unsigned char sbox[] = 
     {
@@ -49,7 +49,7 @@ namespace aes{
         aes_word(unsigned char(&)[4]);
         aes_word();
         aes_word& operator=(int);
-        unsigned char& operator[](int);
+        unsigned char& operator[](size_t);
         operator int();
         aes_word operator%(unsigned char(&)[256]);
         aes_word& operator%=(unsigned char(&)[256]);
@@ -57,6 +57,8 @@ namespace aes{
         aes_word& operator*=(aes_matrix&);
         aes_word operator<<(int);
         aes_word& operator<<=(int);
+        aes_word operator^(const aes_word&);
+        aes_word& operator^=(const aes_word&);
     };
     
     
@@ -73,7 +75,9 @@ namespace aes{
     
     
     struct aes_block{
-        unsigned char bytes[16];
+        unsigned char bytes[4][4];
+        aes_block(unsigned char(&)[4][4]);
+        aes_block();
         aes_block operator<<(int);
         aes_block& operator<<=(int);
         aes_word& operator[](int);
@@ -83,14 +87,12 @@ namespace aes{
         aes_block& operator^=(round_key&);
         aes_block operator>>(int);
         aes_block& operator>>=(int);
-        unsigned char* operator[](int);
     };
-    
     
     
     void getKey(aes_key&,unsigned char(&)[16]);
     void getKey(aes_key&,unsigned char(&)[24]);
-    void getKey(aes_key&,unsigned char(&)[256]);
+    void getKey(aes_key&,unsigned char(&)[32]);
     
     namespace schedule{
         static unsigned char rcon[] =
@@ -158,7 +160,7 @@ namespace aes{
         constexpr size_t BlockNumber = (N+Padding)/16;
         unsigned char Blocks[16][BlockNumber];
 
-        padding::pkcs5(input,reinterpret_cast<unsigned char[N+Padding]>(Blocks));
+        padding::pkcs5(input,reinterpret_cast<unsigned char(&)[N+Padding]>(Blocks));
         aes_key key;
         aes_block block;
         getKey(key,input);

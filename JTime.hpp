@@ -167,11 +167,11 @@ const Instant EPOCH = Instant::fromEpochSecond(0);
 /*
     Instant Constant Holding the Effective Max value for an instant (1<<63-1 seconds, 999999999 nanoseconds)
 */
-const Instant MAX = Instant::fromEpochSecond(9223372036854775807,999999999);
+const Instant MAX = Instant::fromEpochSecond(9223372036854775807LL,999999999);
 /*
     Instant Constant Holding the Effective Minimum value for an instant (-1<<63 seconds)
 */
-const Instant MIN = Instant::fromEpochSecond(-9223372036854775808);
+const Instant MIN = Instant::fromEpochSecond(-9223372036854775808LL);
 /*
     A class that represents a Duration between 2 Instants.
     This Duration is precise to Nanoseconds and stores 64-bit seconds with 32-bit nanoseconds.

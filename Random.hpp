@@ -10,7 +10,7 @@
 #include <array>
 typedef uint64_t seed_t;
 
-using std::mutex;
+using std::recursive_mutex;
 using std::try_lock;
 using std::array;
 
@@ -20,7 +20,7 @@ using std::array;
 	This file follows the specification for the Random class defined by that document.
 	As per the specification this class comes with 2 Warnings:
 	The Random class is thread-safe, however using an instance of Random across multiple threads may have unpredictable effects.
-	The Random class is not cryptographically-secure. 
+	The Random class is not cryptographically-secure. Use the SecureRandom class instead.
 	See the warnings on https://docs.oracle.com/javase/8/docs/api/java/util/Random.html for more details on these warnings
 	Code implementation provided by Connor Horman.
 */
@@ -29,11 +29,10 @@ class Random{
 private:
 	seed_t seed;
 	double nextNextGaussian;
-	bool haveNextNextGaussian;
-	mutex lock;
+	bool haveNextNextGaussian;	
 protected:
 	virtual uint32_t next(int bits);
-
+    recursive_mutex lock;
 public:
 	/*
 	    Constructs a Pseudorandom Number generator.

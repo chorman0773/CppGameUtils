@@ -5,7 +5,7 @@
 #include <sstream>
 #include "StringHelper.hpp"
 #include <cstdlib>
-#include "Random.hpp"
+#include "SecureRandom.hpp"
 #include "JTime.hpp"
 
 #include <SHA256.hpp>
@@ -13,7 +13,7 @@
 extern const int32_t hashPrime;
 
 
-Random uuidRandom;
+SecureRandom uuidRandom;
 
 
 
@@ -48,6 +48,8 @@ UUID::UUID(string str){
 	high = stoull(highPart,nullptr,16);
 	low = stoull(lowPart,nullptr,16);
 }
+
+UUID::UUID(const char* str):UUID(string(str)){}
 
 
 UUID UUID::fromString(string str){
@@ -113,7 +115,7 @@ UUID UUID::ofNow(){
 
 UUID UUID::randomUUID(){
 	char bytes[32];
-	uint64_t (&longs)[2] = reinterpret_cast<uint64_t(&)[2]>(bytes);
+	uint64_t longs[2];
 	int (&ints)[4] = reinterpret_cast<int(&)[4]>(bytes);
 	for(int& i:ints)
 		i = uuidRandom.nextInt();
@@ -121,6 +123,12 @@ UUID UUID::randomUUID(){
 	for(int i = 0;i<16;i++){
 		bytes[i] = bytes[2*i]^bytes[2*i+1];
 	}
+	bytes[4] = (bytes[4]&0xf)|0x40;
+	bytes[8] = (bytes[8]&0xcf)|0x80;
+	longs[0] = uint64_t(bytes[0])<<56|uint64_t(bytes[1])<<48|uint64_t(bytes[2])<<40|uint64_t(bytes[3])<<3
+			  |uint64_t(bytes[4])<<24|uint64_t(bytes[5])<<16|uint64_t(bytes[6])<<8|uint64_t(bytes[7]);
+	longs[1] = uint64_t(bytes[8])<<56|uint64_t(bytes[9])<<48|uint64_t(bytes[10])<<40|uint64_t(bytes[11])<<3
+			  |uint64_t(bytes[12])<<24|uint64_t(bytes[13])<<16|uint64_t(bytes[14])<<8|uint64_t(bytes[15]);
 	return UUID(longs[0],longs[1]);
 }
 
@@ -158,6 +166,6 @@ namespace std{
 	};
 };
 
-template<> int hashcode<UUID>(UUID u){
+int hashcode(const UUID& u){
 	return u.hashCode();
 }
